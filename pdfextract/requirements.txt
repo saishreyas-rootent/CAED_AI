@@ -1,0 +1,5 @@
+pymupdf
+ezdxf<1.1
+streamlit<1.36.0
+streamlit-drawable-canvas>=0.9.3
+vtracer

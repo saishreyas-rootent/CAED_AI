@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node.js
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# Project specific
+temp_data/
+*.dxf
+!sample.dxf
+!sample2.dxf
+*.zip
+
+# IDEs
+.vscode/
+.idea/
