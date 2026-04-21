@@ -1,41 +1,55 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
 
-@layer base {
-  body {
-    @apply bg-slate-950 text-slate-50;
-  }
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.glass {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10;
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
-.glass-card {
-  @apply glass rounded-2xl shadow-xl overflow-hidden;
+body {
+  font-family: 'DM Sans', 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.btn-primary {
-  @apply px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-medium transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100;
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(198,40,40,0.5); }
+
+/* Range input */
+input[type='range'] {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(128,128,128,0.2);
+  outline: none;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #C62828;
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(198,40,40,0.2);
 }
 
-.btn-secondary {
-  @apply px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg font-medium transition-all active:scale-95;
+/* Remove number input spinners */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
 }
 
-input[type="number"], input[type="text"] {
-  @apply bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500 outline-none transition-all;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-slate-950;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-800 rounded-full hover:bg-slate-700;
+/* Focus visible */
+button:focus-visible, input:focus-visible {
+  outline: 2px solid rgba(198,40,40,0.5);
+  outline-offset: 2px;
 }

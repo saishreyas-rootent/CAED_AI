@@ -4,5 +4,7 @@ vtracer
 fastapi
 uvicorn[standard]
 python-multipart
+icecream
+opencv-python-headless
 # streamlit<1.36.0 (optional, not needed for FastAPI but kept for compatibility)
 # streamlit-drawable-canvas>=0.9.3 (optional)

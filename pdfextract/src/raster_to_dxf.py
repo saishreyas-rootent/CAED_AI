@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import ezdxf
+import cv2
+import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 try:
@@ -160,7 +162,15 @@ def preprocess_image(source, threshold=128, invert=False):
 
     # Keep the preview image in 8-bit mode so Streamlit and DXF conversion share the same binary result.
     binary = grayscale.point(lambda pixel: 255 if pixel >= threshold else 0, mode="L")
-    return binary
+
+    # Morphological cleanup significantly reduces double contours and tiny artifacts.
+    binary_array = np.array(binary, dtype=np.uint8)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    binary_array = cv2.morphologyEx(binary_array, cv2.MORPH_CLOSE, kernel, iterations=1)
+    binary_array = cv2.morphologyEx(binary_array, cv2.MORPH_OPEN, kernel, iterations=1)
+    binary_array = cv2.medianBlur(binary_array, 3)
+
+    return Image.fromarray(binary_array, mode="L")
 
 
 def _run_potrace(binary_image):
@@ -202,9 +212,9 @@ def vectorize_binary_image(binary_image):
                     output_path,
                     colormode="binary",
                     mode="polygon",
-                    hierarchical="stacked",
-                    filter_speckle=4,
-                    path_precision=2,
+                    hierarchical="cutout",
+                    filter_speckle=8,
+                    path_precision=5,
                 )
             except Exception as exc:
                 raise VectorizationError(f"vtracer vectorization failed: {exc}") from exc
@@ -555,6 +565,20 @@ def _svg_canvas_size(svg_text, fallback_size):
     return 0.0, 0.0, fallback_size[0], fallback_size[1]
 
 
+def _quantized_point(point, tolerance):
+    return (round(point[0] / tolerance), round(point[1] / tolerance))
+
+
+def _line_key(start, end, tolerance):
+    a = _quantized_point(start, tolerance)
+    b = _quantized_point(end, tolerance)
+    return (a, b) if a <= b else (b, a)
+
+
+def _segment_length(start, end):
+    return math.hypot(end[0] - start[0], end[1] - start[1])
+
+
 class RasterToDXFConverter:
     """Converts a raster image to vector DXF linework."""
 
@@ -581,14 +605,18 @@ class RasterToDXFConverter:
     def convert(self, output_path, threshold=128, invert=False, layer_name="RASTER_VECTOR"):
         """Runs the full raster -> binary image -> SVG -> DXF pipeline."""
         binary_image = preprocess_image(self.raster_source, threshold=threshold, invert=invert)
-        svg_text = vectorize_binary_image(binary_image)
 
         self._setup_dxf(layer_name)
+
+        svg_text = vectorize_binary_image(binary_image)
 
         min_x, min_y, canvas_width, canvas_height = _svg_canvas_size(svg_text, binary_image.size)
         if canvas_width <= 0 or canvas_height <= 0:
             raise VectorizationError("The generated SVG does not contain a valid canvas size.")
 
+        dedupe_tolerance = max(0.05, max(canvas_width, canvas_height) * 0.0003)
+        min_segment_length = max(0.4, dedupe_tolerance * 3.0)
+        line_keys = set()
         entity_count = 0
         for segment in iter_svg_segments(svg_text):
             segment_type = segment[0]
@@ -596,8 +624,12 @@ class RasterToDXFConverter:
             if segment_type in {"line", "close"}:
                 start = self._transform_point(segment[1], canvas_height, x_offset=min_x, y_offset=min_y)
                 end = self._transform_point(segment[2], canvas_height, x_offset=min_x, y_offset=min_y)
-                if start != end:
+                if start != end and _segment_length(start, end) >= min_segment_length:
+                    key = _line_key(start, end, dedupe_tolerance)
+                    if key in line_keys:
+                        continue
                     self.msp.add_line(start, end, dxfattribs={"layer": layer_name})
+                    line_keys.add(key)
                     entity_count += 1
             elif segment_type == "cubic":
                 start = self._transform_point(segment[1], canvas_height, x_offset=min_x, y_offset=min_y)

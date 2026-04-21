@@ -1,109 +1,177 @@
 import React from 'react';
 import { Settings, FileType, Filter, Layers, Scissors } from 'lucide-react';
 
-export default function Sidebar({ options, setOptions }) {
-  const handleChange = (key, value) => {
-    setOptions(prev => ({ ...prev, [key]: value }));
+export default function Sidebar({ options, setOptions, isDark }) {
+  const handle = (key, value) => setOptions(prev => ({ ...prev, [key]: value }));
+
+  const s = {
+    sidebar: {
+      width: 272,
+      borderRight: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
+      padding: '28px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 28,
+      height: '100%',
+      overflowY: 'auto',
+      background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.7)',
+      flexShrink: 0,
+    },
+    sectionLabel: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      fontSize: 11,
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      letterSpacing: '0.1em',
+      color: '#C62828',
+      marginBottom: 4,
+    },
+    label: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      cursor: 'pointer',
+      fontSize: 13,
+      color: isDark ? '#cbd5e1' : '#475569',
+      userSelect: 'none',
+    },
+    inputLabel: {
+      fontSize: 11,
+      color: isDark ? '#64748b' : '#94a3b8',
+      marginBottom: 6,
+      display: 'block',
+    },
+    input: {
+      width: '100%',
+      padding: '7px 12px',
+      borderRadius: 8,
+      border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)',
+      background: isDark ? 'rgba(255,255,255,0.05)' : '#fff',
+      color: isDark ? '#e2e8f0' : '#1e293b',
+      fontSize: 13,
+      outline: 'none',
+      boxSizing: 'border-box',
+    },
+    checkbox: {
+      width: 16,
+      height: 16,
+      accentColor: '#C62828',
+      cursor: 'pointer',
+    },
+    muted: {
+      fontSize: 12,
+      color: isDark ? '#475569' : '#94a3b8',
+      lineHeight: 1.6,
+    },
   };
 
   return (
-    <div className="w-80 border-r border-white/10 p-6 flex flex-col gap-8 h-full bg-slate-900/50">
-      <div className="flex items-center gap-2 text-brand-400 font-semibold uppercase tracking-wider text-xs">
-        <Settings size={16} />
+    <div style={s.sidebar}>
+      <div style={s.sectionLabel}>
+        <Settings size={13} />
         <span>Extraction Settings</span>
       </div>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <FileType size={16} />
+      {/* Content Type */}
+      <section>
+        <div style={{ ...s.sectionLabel, color: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }}>
+          <FileType size={13} />
           <span>Content Type</span>
         </div>
-        <div className="space-y-2 px-1">
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <input 
-              type="checkbox" 
-              checked={options.includeGeom}
-              onChange={e => handleChange('includeGeom', e.target.checked)}
-              className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-brand-500 focus:ring-brand-500"
-            />
-            <span className="text-sm group-hover:text-white transition-colors">Include Geometry</span>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <input 
-              type="checkbox" 
-              checked={options.includeText}
-              onChange={e => handleChange('includeText', e.target.checked)}
-              className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-brand-500 focus:ring-brand-500"
-            />
-            <span className="text-sm group-hover:text-white transition-colors">Include Text</span>
-          </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 4 }}>
+          {[
+            { key: 'includeGeom', label: 'Include Geometry' },
+            { key: 'includeText', label: 'Include Text' },
+          ].map(({ key, label }) => (
+            <label key={key} style={s.label}>
+              <input
+                type="checkbox"
+                style={s.checkbox}
+                checked={options[key]}
+                onChange={e => handle(key, e.target.checked)}
+              />
+              {label}
+            </label>
+          ))}
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <Filter size={16} />
+      {/* Filters */}
+      <section>
+        <div style={{ ...s.sectionLabel, color: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }}>
+          <Filter size={13} />
           <span>Filters</span>
         </div>
-        <div className="space-y-4 px-1">
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <input 
-              type="checkbox" 
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 4 }}>
+          <label style={s.label}>
+            <input
+              type="checkbox"
+              style={s.checkbox}
               checked={options.skipCurves}
-              onChange={e => handleChange('skipCurves', e.target.checked)}
-              className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-brand-500 focus:ring-brand-500"
+              onChange={e => handle('skipCurves', e.target.checked)}
             />
-            <span className="text-sm group-hover:text-white transition-colors">Skip Curves (Bezier)</span>
+            Skip Curves (Bezier)
           </label>
-          <div className="space-y-2">
-            <span className="text-xs text-slate-400">Min Geometry Size (pts)</span>
-            <input 
-              type="number" 
+          <div>
+            <span style={s.inputLabel}>Min Geometry Size (pts)</span>
+            <input
+              type="number"
               value={options.minSize}
-              onChange={e => handleChange('minSize', parseFloat(e.target.value) || 0)}
-              className="w-full"
+              onChange={e => handle('minSize', parseFloat(e.target.value) || 0)}
+              style={s.input}
             />
           </div>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <Layers size={16} />
+      {/* Page Range */}
+      <section>
+        <div style={{ ...s.sectionLabel, color: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }}>
+          <Layers size={13} />
           <span>Page Range</span>
         </div>
-        <div className="grid grid-cols-2 gap-4 px-1">
-          <div className="space-y-2">
-            <span className="text-xs text-slate-400">From</span>
-            <input 
-              type="number" 
-              value={options.pageFrom}
-              onChange={e => handleChange('pageFrom', parseInt(e.target.value) || 1)}
-              className="w-full"
+        <div style={{ paddingLeft: 4 }}>
+          <label style={{ ...s.label, marginBottom: 10 }}>
+            <input
+              type="checkbox"
+              style={s.checkbox}
+              checked={options.processAllPages}
+              onChange={e => handle('processAllPages', e.target.checked)}
             />
-          </div>
-          <div className="space-y-2">
-            <span className="text-xs text-slate-400">To</span>
-            <input 
-              type="number" 
-              value={options.pageTo}
-              onChange={e => handleChange('pageTo', parseInt(e.target.value) || 999)}
-              className="w-full"
-            />
-          </div>
+            Process all pages
+          </label>
+          {!options.processAllPages && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {[
+                { key: 'pageFrom', label: 'From' },
+                { key: 'pageTo', label: 'To' },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <span style={s.inputLabel}>{label}</span>
+                  <input
+                    type="number"
+                    value={options[key]}
+                    onChange={e => handle(key, parseInt(e.target.value) || 1)}
+                    style={s.input}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <Scissors size={16} />
+      {/* Region Control */}
+      <section>
+        <div style={{ ...s.sectionLabel, color: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }}>
+          <Scissors size={13} />
           <span>Region Control</span>
         </div>
-        <div className="px-1">
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Enable crop in the preview window to define a specific area for extraction.
-          </p>
-        </div>
+        <p style={{ ...s.muted, paddingLeft: 4 }}>
+          Enable crop in the preview panel to define a specific area for extraction.
+        </p>
       </section>
     </div>
   );
